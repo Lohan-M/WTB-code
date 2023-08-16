@@ -11,13 +11,36 @@ algo::Core::Core(void)
 }
 
 /**
+ * The function `rndm` generates a random number between `a` and `b` using a power law distribution
+ * with exponent `g`, and returns the rounded result.
+ * 
+ * @param a The parameter "a" is an integer value.
+ * @param b The parameter "b" represents the upper bound of the range from which the random number will
+ * be generated.
+ * @param g The parameter "g" represents the exponent used in the calculation. It is used to raise the
+ * values of "a" and "b" to the power of "g" in the formula.
+ * @param size The "size" parameter is not used in the given code snippet. It is not clear what it is
+ * intended for.
+ * 
+ * @return a rounded value calculated using the given parameters.
+ */
+int algo::rndm(int a, int b, double g) {
+    std::random_device eng;
+    using dist_params = typename std::uniform_int_distribution<int>::param_type;
+    std::uniform_int_distribution<int> dist (0, INT_MAX);
+    double r = (double) dist(eng) / INT_MAX;
+    double ag = pow(a, g);
+    double bg = pow(b, g);
+    return round(pow((ag + (bg - ag)*r), (double) (1./g)));
+}
+
+/**
  * The function `init_data` reads data from a file, processes it, and initializes the `graph` object
- * with the data.
+ * with the data. Works for datasets: WQ, SO and LK.
  * 
  * @param src The parameter `src` is a `std::string` that represents the file path of the input file.
  * 
- * @return Nothing is being returned in this code snippet. It is a void function, which means it does
- * not have a return type.
+ * @return Nothing is being returned.
  */
 void algo::Core::init_data(std::string const &src)
 {
@@ -33,50 +56,7 @@ void algo::Core::init_data(std::string const &src)
         e.src--; e.dst--;
         max_src = std::max(max_src, e.src);
         max_dst = std::max(max_dst, e.dst);
-        e.end_time = e.start_time + rndm(3600, 172800, -2.5, 1);
-        edges.push_back(e);
-    }
-    std::sort(edges.begin(), edges.end(), [](edge const &a, edge const &b) {
-        return a.start_time < b.start_time;
-    });
-
-    graph.init(max_src, max_dst);
-
-    for (int i = 0; i < edges.size() ; i++) {
-        graph.upper[edges[i].src].edges.push_back(i);
-        graph.lower[edges[i].dst].edges.push_back(i);
-    }
-}
-
-/**
- * The function `init_data3` reads data from a file, generates random values, and initializes a graph
- * data structure.
- * 
- * @param src The parameter `src` is a `std::string` that represents the file path of the input file.
- * 
- * @return Nothing is being returned in this function. It has a void return type.
- */
-void algo::Core::init_data3(std::string const &src)
-{
-    std::ifstream file(src);
-    char trash;
-    int max_src = 0, max_dst = 0;
-    std::random_device eng;
-    using dist_params = typename std::uniform_int_distribution<int>::param_type;
-    std::uniform_int_distribution<int> dist (1, 3);
-    std::uniform_int_distribution<int> dist2 (1, 8);
-
-    if (!file.is_open())
-        throw std::runtime_error("couldn't open file:" + src);
-    while (!file.eof()) {
-        algo::edge e; double ts; file >> e.src;
-        e.dst = dist(eng);
-        e.start_time = dist2(eng);
-        e.src--; e.dst--;
-        max_src = std::max(max_src, e.src);
-        max_dst = std::max(max_dst, e.dst);
-        //e.end_time = e.start_time + rndm(3600, 172800, -2.5, 1);
-        e.end_time = e.start_time + rndm(2, 15, -2.5, 1);
+        e.end_time = e.start_time + rndm(3600, 172800, -2.5); // 1 hour to 48 hours
         edges.push_back(e);
     }
     std::sort(edges.begin(), edges.end(), [](edge const &a, edge const &b) {
@@ -114,133 +94,13 @@ void algo::Core::init_data3(std::string const &src)
     greedy3_v2(graph, 3);
 */
 
-int algo::Core::main(int ac, char **av)
-{
-    if (ac != 2)
-        throw std::runtime_error("Need to specify dataset src");
 
-    init_data(av[1]);
-    std::cout << "Init finished" << std::endl;
-
-    auto list_dict1 = third_index_build(graph, 0, INT_MAX);
-    std::vector<algo::third_entry> LEO = sort_list_entries(list_dict1);
-    list_dict1.clear();
-    std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<int>>> posit = list_position(LEO);
-    //std::vector<int> test;
-    std::vector<int> test2;
-    std::vector<int> lower;
-    std::random_device eng;
-    using dist_params = typename std::uniform_int_distribution<int>::param_type;
-    std::uniform_int_distribution<int> dist (0, graph.upper.size()-1);
-    std::uniform_int_distribution<int> dist2 (0, graph.lower.size()-1);
-    
-    std::vector<int> test;
-    for (int i = 0; i < 10; i++) {
-        int a = dist(eng);
-        int b = dist(eng);
-        while (b == a) {
-            b = dist(eng);
-        }
-        test.emplace_back(a);
-        test2.emplace_back(b);
-        lower.emplace_back(dist2(eng));
-    }
-    /*
-        std::vector<algo::edge> test_edges;
-        for (int i = 0; i < 1000; i++) {
-            algo::edge e;
-            e.src = dist(eng);
-            e.dst = dist2(eng);
-            e.start_time = 1100000000 + rand() % 400000000;
-            e.end_time = e.start_time + rndm(3600, 172800, -2.5, 1);
-            test_edges.emplace_back(e);
-        }
-        std::vector<bool> eval1;
-        std::vector<bool> eval2;
-        std::vector<int> eval3;
-        std::vector<int> eval4;
-
-        auto order = get_vertex_order(graph);
-        for (int i = 0 ; i < order.size() ; i++) {
-            graph.upper[order[i]].order = i;
-        }
-        //auto index = TBP_build(order, graph);
-        //auto invL_in = inverted_in_label_set(index.L_in);
-
-    auto start = std::chrono::high_resolution_clock::now();
-    //auto index = TBP_build(order, graph);
-
-    //test_SPRQ_baseline(index, test, test2);
-    //test_SSRQ_baseline(index.L_out, invL_in, test);
-    //test_maxR_baseline(index.L_out, invL_in);
-    //test_VRCQ_baseline(graph);
-
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "Time taken by function: " << duration.count() << " microseconds" << std::endl;
-
-    //auto invL_in = inverted_in_label_set(index.L_in);
-
-    auto start1 = std::chrono::high_resolution_clock::now();
-
-    //test_SPRQ_baseline(index, test, test2);
-    //test_SPRQ_WTB(LEO, std::get<0>(posit), std::get<1>(posit), test, test2);
-    //test_SSRQ_WTB(LEO, std::get<0>(posit), test);
-    test_maxR_WTB(LEO, std::get<0>(posit));
-    //test_VRCQ_WTB(list_dict, graph.upper.size());
-
-    auto stop1 = std::chrono::high_resolution_clock::now();
-    auto duration1 = std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1);
-    std::cout << "Time taken by function: " << duration1.count() << " microseconds" << std::endl;
-
-    auto start2 = std::chrono::high_resolution_clock::now();
-    //test_SSRQ_baseline(index.L_out, invL_in, test);
-
-    auto stop2 = std::chrono::high_resolution_clock::now();
-    auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(stop2 - start2);
-    std::cout << "Time taken by function: " << duration2.count() << " microseconds" << std::endl;
-
-    auto start3 = std::chrono::high_resolution_clock::now();
-
-    //test_maxR_baseline(index.L_out, invL_in);
-
-    auto stop3 = std::chrono::high_resolution_clock::now();
-    auto duration3 = std::chrono::duration_cast<std::chrono::microseconds>(stop3 - start3);
-    std::cout << "Time taken by function: " << duration3.count() << " microseconds" << std::endl;
-*/
-    return 0;
-}
-
-/**
- * The function `rndm` generates a random number between `a` and `b` using a power law distribution
- * with exponent `g`, and returns the rounded result.
- * 
- * @param a The parameter "a" is an integer value.
- * @param b The parameter "b" represents the upper bound of the range from which the random number will
- * be generated.
- * @param g The parameter "g" represents the exponent used in the calculation. It is used to raise the
- * values of "a" and "b" to the power of "g" in the formula.
- * @param size The "size" parameter is not used in the given code snippet. It is not clear what it is
- * intended for.
- * 
- * @return a rounded value calculated using the given parameters.
- */
-int algo::rndm(int a, int b, double g, int size) {
-    std::random_device eng;
-    using dist_params = typename std::uniform_int_distribution<int>::param_type;
-    std::uniform_int_distribution<int> dist (0, INT_MAX);
-    double r = (double) dist(eng) / INT_MAX;
-    double ag = pow(a, g);
-    double bg = pow(b, g);
-    return round(pow((ag + (bg - ag)*r), (double) (1./g)));
-}
 
 /**
  * The function "get_vertex_order" returns a vector of integers representing the order of vertices in a
  * graph, sorted in descending order based on the number of edges each vertex has.
  * 
- * @param graph The parameter `graph` is of type `algo::Graph const&`, which means it is a constant
- * reference to an object of type `algo::Graph`.
+ * @param graph temporal bipartie graph
  * 
  * @return a std::vector<int> containing the order of vertices in the graph.
  */
@@ -259,7 +119,8 @@ std::vector<int> algo::Core::get_vertex_order(algo::Graph const &graph)
 
 /**
  * The function "get_partitions_of_node" takes a vector of edges and a node, and returns a vector of
- * partitions of the node's edges based on their start and end times.
+ * partitions of the node's edges, the edges in each partition overlap with at least one other edge in the partition
+ * and edges from different partitions don't overlap.
  * 
  * @param edges The parameter `edges` is a vector of `algo::edge` objects.
  * @param node The "node" parameter is of type "algo::Node&", which means it is a reference to an
@@ -288,14 +149,10 @@ std::vector<algo::partition> algo::Core::get_partitions_of_node(std::vector<algo
 /**
  * The function `TBP_build` builds a TBP_index based on a given vertex order and graph.
  * 
- * @param vertex_order The parameter "vertex_order" is a vector of integers that represents the order
- * in which the vertices of the graph should be processed. Each integer in the vector corresponds to
- * the index of a vertex in the "graph.upper" vector.
- * @param graph The "graph" parameter is an object of type "Graph" which represents a graph data
- * structure. It contains two vectors: "upper" and "lower". The "upper" vector represents the upper
- * level of the graph, while the "lower" vector represents the lower level of the graph. Each
+ * @param vertex_order
+ * @param graph temporal bipartie graph
  * 
- * @return an object of type `algo::TBP_index`.
+ * @return a TBP-index.
  */
 algo::TBP_index algo::Core::TBP_build(std::vector<int> const &vertex_order, algo::Graph &graph)
 {
@@ -307,7 +164,6 @@ algo::TBP_index algo::Core::TBP_build(std::vector<int> const &vertex_order, algo
     for (int i = 0; i < vertex_order.size() ; i++) {
         std::vector<bool> visited(edges.size());
         std::vector<int> minT(graph.upper.size(), INT_MAX);
-        //std::vector<int> maxminT(graph.lower.size(), INT_MAX);
         {
             auto cmp = [](entry const &a, entry const &b) {return a.start_time < b.start_time;};
             std::priority_queue<algo::entry, std::vector<algo::entry>, decltype(cmp)> q(cmp);
@@ -332,10 +188,6 @@ algo::TBP_index algo::Core::TBP_build(std::vector<int> const &vertex_order, algo
                     for (int k = 0 ; k < w_edges.size() ; k++) {
                         if (!(!visited[w_edges[k]] && edges[w_edges[k]].start_time >= w.end_time)) continue;
                         visited[w_edges[k]] = true;
-                        int t = 0;
-                        //if (edges[w_edges[k]].start_time >= (int) maxminT[edges[w_edges[k]].dst]) {
-                            //continue;
-                        //}
                         algo::partition const *partition = find_partition(graph.lower[edges[w_edges[k]].dst].partitions, w_edges[k]);
                         if (!partition) continue;
                         for (int l = 0; l < partition->size() ; l++) {
@@ -353,10 +205,7 @@ algo::TBP_index algo::Core::TBP_build(std::vector<int> const &vertex_order, algo
                                 q.push({edges[edge_id].src, w.start_time, edges[edge_id].end_time});
                                 minT[edges[edge_id].src] = edges[edge_id].end_time;
                             }
-                            t = std::max(t, minT[edges[edge_id].src]);
                         }
-                        //if (t)
-                            //maxminT[edges[w_edges[k]].dst] = t;
                     }
                 }
             }
@@ -393,8 +242,6 @@ algo::TBP_index algo::Core::TBP_build(std::vector<int> const &vertex_order, algo
                     for (int k = 0 ; k < w_edges.size() ; k++) {
                         if (!(!visited1[w_edges[k]] && edges[w_edges[k]].end_time <= w.start_time)) continue;
                         visited1[w_edges[k]] = true;
-                        int t = INT_MAX;
-                        //if (edges[w_edges[k]].end_time <= minmaxT[edges[w_edges[k]].dst]) continue;
                         algo::partition const *partition = find_partition(graph.lower[edges[w_edges[k]].dst].partitions, w_edges[k]);
                         if (!partition) continue;
                         for (int l = 0; l < partition->size() ; l++) {
@@ -406,10 +253,7 @@ algo::TBP_index algo::Core::TBP_build(std::vector<int> const &vertex_order, algo
                                 q.push({edges[edge_id].src, edges[edge_id].start_time, w.end_time});
                                 maxT[edges[edge_id].src] = edges[edge_id].start_time;
                             }
-                            t = std::min(t, maxT[edges[edge_id].src]);
                         }
-                        //if (t != INT_MAX)
-                            //minmaxT[edges[w_edges[k]].dst] = t;
                     }
                 }
             }
@@ -495,15 +339,13 @@ bool algo::Core::TBP_query(TBP_index const &index, Node const &u, Node const &w,
 }
 
 /**
- * The function `inverted_in_label_set` takes a 2D vector `L_in` and returns a new 2D vector `invL_in`
- * where the entries are inverted based on the node index.
+ * The function checks if two edges are colliding based on their start and end times.
  * 
- * @param a The parameter "a" in the function `edge_colliding` represents the index of an edge in a
- * collection of edges.
- * @param b The parameter "b" in the function "edge_colliding" represents the index of an edge in a
- * collection of edges.
+ * @param a The parameter "a" represents the index of the first edge in the edges array.
+ * @param b The parameter "b" in the edge_colliding function represents the index of the second edge in
+ * the edges array.
  * 
- * @return The function `inverted_in_label_set` returns a vector of vectors of `algo::entry` objects.
+ * @return a boolean value.
  */
 bool algo::Core::edge_colliding(int a, int b)
 {
@@ -770,7 +612,7 @@ std::vector<algo::wedge> algo::Core::necessary_wedges(std::vector<algo::wedge> &
 }
 
 /**
- * The function `third_index_build` builds a third-level index for a graph by iterating through the
+ * The function `third_index_build` builds a WTB index for a graph by iterating through the
  * lower level nodes and their edges, and creating a map of vertex pairs to a vector of wedges.
  * 
  * @param graph The `graph` parameter is an object of type `algo::Graph`, which represents a graph data
@@ -824,8 +666,7 @@ std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCo
 }
 
 /**
- * The function `sort_list_entries` takes a list of dictionaries and returns a sorted list of entries
- * based on their end time.
+ * The function `sort_list_entries` sorts the WTB-index based on end times.
  * 
  * @param vector The parameter `list_dict` is a vector of maps. Each map in the vector represents a
  * dictionary where the key is of type `algo::vertices_pair` and the value is a vector of `algo::wedge`
@@ -855,13 +696,11 @@ std::vector<algo::third_entry> algo::Core::sort_list_entries(std::vector<std::ma
 }
 
 /**
- * The function `third_choose_vertex_v2` selects a vertex based on certain criteria from a given list
- * of vertices and their corresponding data structures.
+ * The function `third_choose_vertex_v2` first constructs the lists L_reach and L_count for a WTB-index
+ * and then finds the best vertex to remove using L_count.
  * 
- * @param vector `list_dict` is a vector of maps. Each map represents a vertex and its adjacent
- * vertices, along with the corresponding edges. The maps are sorted based on some criteria.
- * @param size The parameter `size` is an integer that represents the size of the list or array. It is
- * used to determine the size of certain data structures and to iterate over the elements of the list.
+ * @param vector `list_dict` is a WTB-index (sorted).
+ * @param size The parameter `size` is the number of upper vertices of the graph.
  * 
  * @return an integer value, which represents the ID of the chosen vertex.
  */
@@ -953,18 +792,15 @@ int algo::Core::third_choose_vertex_v2(std::vector<std::map<algo::vertices_pair,
 }
 
 /**
- * The function `greedy3_v2` is a C++ implementation of a greedy algorithm that removes a specified
- * number of vertices from a graph based on a specific criteria.
+ * The function `greedy3_v2` implements a greedy algorithm to remove `k` vertices from a graph, returning
+ * the list of removed vertices.
  * 
- * @param graph The "graph" parameter is an object of type "algo::Graph", which represents a graph data
- * structure.
+ * @param graph Temporal bipartite graph.
  * @param k The parameter "k" represents the number of vertices to be removed from the graph.
- * @param start The `start` parameter is an integer representing the starting vertex in the graph.
- * @param end The "end" parameter in the given code is an integer constant representing the end vertex
- * of the graph.
+ * @param start
+ * @param end
  * 
- * @return The function `greedy3_v2` returns a `std::vector<int>` containing the vertices that were
- * removed during the execution of the algorithm.
+ * @return Vector of the removed vertices.
  */
 std::vector<int> algo::Core::greedy3_v2(algo::Graph &graph, int k, int const &start, int const &end)
 {
@@ -984,7 +820,7 @@ std::vector<int> algo::Core::greedy3_v2(algo::Graph &graph, int k, int const &st
  * vectors, where the first vector contains the positions of each source node in the input vector, and
  * the second vector contains the positions of each destination node in the input vector.
  * 
- * @param LEO A reference to a vector of objects of type `algo::third_entry`.
+ * @param LEO A WTB-index (sorted).
  * 
  * @return The function `list_position` returns a `std::tuple` containing two elements:
  * 1. `src_positions`: A `std::vector` of `std::vector<int>`, where each inner vector represents the
@@ -1096,12 +932,11 @@ std::vector<int> algo::Core::SSRQ_static2(std::vector<algo::third_entry> &LEO, s
 }
 
 /**
- * The function `max_reach_static` calculates the maximum reach of nodes in a graph based on a given
- * set of entries.
+ * The function `max_reach_static` calculates the maximum reachability of nodes in a graph.
  * 
- * @param LEO LEO is a reference to a vector of algo::third_entry objects.
+ * @param LEO A WTB-index (sorted).
  * 
- * @return the maximum reach value, which is an integer.
+ * @return the maximum reachability value, which is an integer.
  */
 int algo::Core::max_reach_static(std::vector<algo::third_entry> &LEO)
 {
@@ -1130,38 +965,15 @@ int algo::Core::max_reach_static(std::vector<algo::third_entry> &LEO)
 }
 
 /**
- * The function `max_reach_static2` calculates the maximum reach of a graph using a specific algorithm.
+ * The function `vertex_removal` removes all wedges associated to the specified vertex.
  * 
- * @param LEO The parameter "LEO" is a reference to a vector of type "algo::third_entry". It is likely
- * used as input data for the function.
- * @param src_pos The `src_pos` parameter is a vector of vectors of integers. Each inner vector
- * represents the position of a source node in the graph. The outer vector contains all the source
- * nodes in the graph.
- * 
- * @return an integer value, which represents the maximum reach of a certain algorithm.
- */
-int algo::Core::max_reach_static2(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos)
-{
-    int maxR = 0;
-    for (int i = 0; i < graph.upper.size(); i++) {
-        int reach = SSRQ_static2(LEO, src_pos, i).size();
-        maxR = std::max(maxR, reach);
-    }
-    return maxR;
-}
-
-/**
- * The function `vertex_removal` removes entries from a vector based on a specified vertex ID and
- * layer.
- * 
- * @param LEO A reference to a vector of objects of type `algo::third_entry`.
+ * @param LEO A WTB-index (sorted).
  * @param vertex_id The `vertex_id` parameter is an integer that represents the ID of the vertex that
  * needs to be removed from the vector `LEO`.
- * @param layer The "layer" parameter is a boolean flag that determines whether the vertex removal
- * should be performed based on the source and destination vertices (if true) or based on the vertex_id
- * (if false).
+ * @param layer The "layer" parameter is a boolean flag that determines whether the vertex is in the
+ * upper or lower layer.
  * 
- * @return the modified vector `LEO` after removing entries that match the specified conditions.
+ * @return the modified vector `LEO` after removing entries.
  */
 std::vector<algo::third_entry> algo::Core::vertex_removal(std::vector<algo::third_entry> &LEO, int vertex_id, bool layer)
 {
@@ -1186,13 +998,12 @@ std::vector<algo::third_entry> algo::Core::vertex_removal(std::vector<algo::thir
 }
 
 /**
- * The function `edge_removal` removes entries from a vector based on specific conditions.
+ * The function `edge_removal` removes wedges associated to a specific edge.
  * 
- * @param LEO A reference to a vector of objects of type `algo::third_entry`.
- * @param edge The "edge" parameter is of type "algo::edge" and represents an edge in a graph. It
- * contains the following attributes:
+ * @param LEO A WTB-index (sorted).
+ * @param edge The specific edge.
  * 
- * @return a vector of type `algo::third_entry`.
+ * @return the modified vector `LEO` after removing entries.
  */
 std::vector<algo::third_entry> algo::Core::edge_removal(std::vector<algo::third_entry> &LEO, algo::edge &edge)
 {
@@ -1212,10 +1023,8 @@ std::vector<algo::third_entry> algo::Core::edge_removal(std::vector<algo::third_
 /**
  * The function checks if two edges are colliding based on their start and end times.
  * 
- * @param e1 The parameter `e1` is of type `algo::edge` and represents the first edge. It contains
- * information about the start time and end time of the edge.
- * @param e2 The above code defines a function named `edge_colliding2` in the `algo::Core` namespace.
- * This function takes two parameters of type `algo::edge` named `e1` and `e2`.
+ * @param e1
+ * @param e2
  * 
  * @return a boolean value.
  */
@@ -1228,9 +1037,8 @@ bool algo::Core::edge_colliding2(algo::edge const &e1, algo::edge const &e2)
  * The function "entry_insertion" inserts a given entry into a sorted vector of entries in a way that
  * maintains the sorted order.
  * 
- * @param LEO A reference to a vector of algo::third_entry objects. This vector represents a collection
- * of entries.
- * @param entry The "entry" parameter is a reference to an object of type "algo::third_entry".
+ * @param LEO.
+ * @param entry
  */
 void algo::Core::entry_insertion(std::vector<algo::third_entry> &LEO, algo::third_entry &entry)
 {
@@ -1248,17 +1056,12 @@ void algo::Core::entry_insertion(std::vector<algo::third_entry> &LEO, algo::thir
 }
 
 /**
- * The function `edge_addition` takes a vector of third_entry objects and an edge object as input, and
- * checks for collisions between the given edge and existing edges in a graph, adding any colliding
- * edges to the vector.
+ * The function `edge_addition` add all newly created wedges to the index.
  * 
- * @param LEO A reference to a vector of algo::third_entry objects. This vector is passed by reference
- * and will be modified within the function.
- * @param edge The "edge" parameter is of type "algo::edge" and represents an edge in a graph. It
- * contains information such as the source vertex, destination vertex, start time, and end time of the
- * edge.
+ * @param LEO.
+ * @param edge
  * 
- * @return a vector of type `std::vector<algo::third_entry>`.
+ * @return
  */
 std::vector<algo::third_entry> algo::Core::edge_addition(std::vector<algo::third_entry> &LEO, algo::edge &edge)
 {
@@ -1277,16 +1080,8 @@ std::vector<algo::third_entry> algo::Core::edge_addition(std::vector<algo::third
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * The function "test_SPRQ_baseline" takes in an index, two vectors of integers, and returns an
- * integer, and it performs a query operation on the index using the values from the two input vectors.
- * 
- * @param index The parameter "index" is of type "algo::TBP_index const&". It is a constant reference
- * to an object of type "algo::TBP_index".
- * @param test The parameter "test" is a vector of integers.
- * @param test2 The parameter "test2" is a vector of integers. It is used in the for loop to access
- * elements at the same index as the "test" vector.
- * 
- * @return an integer value of 0.
+ * The following functions are the test functions for the different operations (SPRQ, SSRQ, MRQ...) for both
+ * the TBP-index and the WTB-index.
  */
 int algo::Core::test_SPRQ_baseline(algo::TBP_index const &index, std::vector<int> test, std::vector<int> test2)
 {
@@ -1298,21 +1093,6 @@ int algo::Core::test_SPRQ_baseline(algo::TBP_index const &index, std::vector<int
     return 0;
 }
 
-/**
- * The function `test_SPRQ_WTB` takes in several parameters and returns an integer value.
- * 
- * @param LEO The parameter "LEO" is a reference to a vector of objects of type "algo::third_entry".
- * @param src_pos The `src_pos` parameter is a vector of vectors of integers. Each inner vector
- * represents the position of a source element. The outer vector represents a collection of source
- * elements.
- * @param dst_pos The parameter `dst_pos` is a vector of vectors of integers. Each inner vector
- * represents the position of a destination node. The outer vector represents a collection of
- * destination nodes.
- * @param test The parameter "test" is a vector of integers.
- * @param test2 The parameter "test2" is a vector of integers.
- * 
- * @return an integer value of 0.
- */
 int algo::Core::test_SPRQ_WTB(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, std::vector<std::vector<int>> &dst_pos, std::vector<int> test, std::vector<int> test2)
 {
     std::vector<bool> eval;
@@ -1323,18 +1103,6 @@ int algo::Core::test_SPRQ_WTB(std::vector<algo::third_entry> &LEO, std::vector<s
     return 0;
 }
 
-/**
- * The function "test_SSRQ_baseline" takes in two vectors of vectors and a vector of integers as
- * parameters, and returns an integer.
- * 
- * @param L_out L_out is a reference to a vector of vectors of algo::entry objects. It is an output
- * parameter that will store the result of the SSRQ algorithm.
- * @param invL_in The parameter "invL_in" is a reference to a vector of vectors of type "algo::entry".
- * It is an input parameter that represents the inverted list data structure.
- * @param test The "test" parameter is a vector of integers. It is used as input to the SSRQ function.
- * 
- * @return an integer value of 0.
- */
 int algo::Core::test_SSRQ_baseline(std::vector<std::vector<algo::entry>> &L_out, std::vector<std::vector<algo::entry>> &invL_in, std::vector<int> test)
 {
     std::vector<int> eval;
@@ -1345,18 +1113,6 @@ int algo::Core::test_SSRQ_baseline(std::vector<std::vector<algo::entry>> &L_out,
     return 0;
 }
 
-/**
- * The function "test_SSRQ_WTB" takes in a vector of "third_entry" objects, a vector of vectors of
- * integers, and a vector of integers, and returns an integer.
- * 
- * @param LEO The parameter "LEO" is a reference to a vector of objects of type "algo::third_entry".
- * @param src_pos The parameter `src_pos` is a vector of vectors of integers. Each inner vector
- * represents the position of a source in a coordinate system. The outer vector represents multiple
- * sources.
- * @param test The "test" parameter is a vector of integers.
- * 
- * @return an integer value of 0.
- */
 int algo::Core::test_SSRQ_WTB(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, std::vector<int> test)
 {
     std::vector<int> eval;
@@ -1367,16 +1123,6 @@ int algo::Core::test_SSRQ_WTB(std::vector<algo::third_entry> &LEO, std::vector<s
     return 0;
 }
 
-/**
- * The function "test_maxR_baseline" evaluates the "maxR_baseline" function multiple times and stores
- * the results in a vector.
- * 
- * @param L_out A reference to a vector of vectors of `algo::entry` objects. This is an output
- * parameter that will be populated with data.
- * @param invL_in The parameter "invL_in" is a reference to a vector of vectors of type "algo::entry".
- * 
- * @return 0.
- */
 int algo::Core::test_maxR_baseline(std::vector<std::vector<algo::entry>> &L_out, std::vector<std::vector<algo::entry>> &invL_in)
 {
     std::vector<int> eval;
@@ -1387,18 +1133,6 @@ int algo::Core::test_maxR_baseline(std::vector<std::vector<algo::entry>> &L_out,
     return 0;
 }
 
-/**
- * The function "test_maxR_WTB" calculates the maximum reach of a given set of entries and stores the
- * results in a vector.
- * 
- * @param LEO A vector of algo::third_entry objects.
- * @param src_pos The parameter `src_pos` is a reference to a vector of vectors of integers. It is used
- * to store the positions of the source nodes in the network. Each inner vector represents the position
- * of a source node, where the first element is the x-coordinate and the second element is the
- * y-coordinate.
- * 
- * @return an integer value of 0.
- */
 int algo::Core::test_maxR_WTB(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos)
 {
     std::vector<int> eval;
@@ -1409,16 +1143,6 @@ int algo::Core::test_maxR_WTB(std::vector<algo::third_entry> &LEO, std::vector<s
     return 0;
 }
 
-/**
- * The function `test_VRCQ_baseline` finds the vertex in a graph that, when removed, results in the
- * smallest maximum reachability.
- * 
- * @param graph The "graph" parameter is an object of type "algo::Graph". It represents a graph data
- * structure and contains information about the vertices and edges of the graph. The "graph" object has
- * a member variable called "lower" which is a vector of objects of type "algo::Vertex". Each
- * 
- * @return an integer value, which represents the vertex with the minimal maximum reach.
- */
 int algo::Core::test_VRCQ_baseline(algo::Graph &graph)
 {
     int minimalMaxReach = INT_MAX;
@@ -1437,17 +1161,83 @@ int algo::Core::test_VRCQ_baseline(algo::Graph &graph)
     return vertex;
 }
 
-/**
- * The function test_VRCQ_WTB takes a list of dictionaries and a size as input and returns the result
- * of the third_choose_vertex_v2 function.
- * 
- * @param vector The parameter `list_dict` is a vector of maps. Each map contains a key-value pair
- * where the key is of type `algo::vertices_pair` and the value is a vector of `algo::wedge` objects.
- * @param size The size parameter represents the size of the list_dict vector.
- * 
- * @return the result of the function call to `third_choose_vertex_v2(list_dict, size)`.
- */
 int algo::Core::test_VRCQ_WTB(std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> &list_dict, int size)
 {
     return third_choose_vertex_v2(list_dict, size);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * Main function to time the operations
+*/
+
+int algo::Core::main(int ac, char **av)
+{
+    if (ac != 2)
+        throw std::runtime_error("Need to specify dataset src");
+
+    init_data(av[1]);
+    
+    std::vector<int> test;
+    std::vector<int> test2;
+    std::vector<int> lower;
+    std::random_device eng;
+    using dist_params = typename std::uniform_int_distribution<int>::param_type;
+    std::uniform_int_distribution<int> dist (0, graph.upper.size()-1);
+    std::uniform_int_distribution<int> dist2 (0, graph.lower.size()-1);
+    
+    std::vector<int> test;
+    for (int i = 0; i < 1000; i++) {
+        int a = dist(eng);
+        int b = dist(eng);
+        while (b == a) {
+            b = dist(eng);
+        }
+        test.emplace_back(a);
+        test2.emplace_back(b);
+        lower.emplace_back(dist2(eng));
+    }
+
+    ///////////////////////////
+    // TBP
+
+    auto order = get_vertex_order(graph);
+    for (int i = 0 ; i < order.size() ; i++) {
+        graph.upper[order[i]].order = i;
+    }
+    //auto index = TBP_build(order, graph);
+    //auto invL_in = inverted_in_label_set(index.L_in);
+
+    auto start = std::chrono::high_resolution_clock::now();
+    //auto index = TBP_build(order, graph);
+
+    //test_SPRQ_baseline(index, test, test2);
+    //test_SSRQ_baseline(index.L_out, invL_in, test);
+    //test_maxR_baseline(index.L_out, invL_in);
+    //test_VRCQ_baseline(graph);
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Time taken by function: " << duration.count() << " microseconds" << std::endl;
+
+    ////////////////////////////
+    // WTB
+
+    auto list_dict1 = third_index_build(graph, 0, INT_MAX);
+    std::vector<algo::third_entry> LEO = sort_list_entries(list_dict1);
+    list_dict1.clear();
+    std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<int>>> posit = list_position(LEO);
+    auto start1 = std::chrono::high_resolution_clock::now();
+    //auto list_dict1 = third_index_build(graph, 0, INT_MAX);
+
+    //test_SPRQ_WTB(LEO, std::get<0>(posit), std::get<1>(posit), test, test2);
+    //test_SSRQ_WTB(LEO, std::get<0>(posit), test);
+    //test_maxR_WTB(LEO, std::get<0>(posit));
+    //test_VRCQ_WTB(list_dict, graph.upper.size());
+
+    auto stop1 = std::chrono::high_resolution_clock::now();
+    auto duration1 = std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1);
+    std::cout << "Time taken by function: " << duration1.count() << " microseconds" << std::endl;
+
+    return 0;
 }
