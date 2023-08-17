@@ -151,20 +151,22 @@ namespace algo {
         void sort_te(std::vector<algo::wedge> &list_w, algo::wedge &wedge);
         bool dominant_wedge(algo::wedge &wedge1, algo::wedge &wedge2);
         std::vector<algo::wedge> necessary_wedges(std::vector<algo::wedge> &list_w, algo::wedge &wedge);
-        std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> third_index_build(algo::Graph &graph, int const &start, int const &end);
+        std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> WTB_index_build(algo::Graph &graph, int const &start, int const &end);
         std::vector<algo::third_entry> sort_list_entries(std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> &list_dict);
-        int third_choose_vertex_v2(std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> &list_dict, int &size);
-        std::vector<int> greedy3_v2(algo::Graph &graph, int k, int const &start, int const &end);
+        int choose_vertex_WTB(std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> &list_dict, int &size);
+        std::vector<int> greedy_WTB(algo::Graph &graph, int k, int const &start, int const &end);
         std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<int>>> list_position(std::vector<algo::third_entry> &LEO);
-        bool SPRQ_static2(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, std::vector<std::vector<int>> &dst_pos, int &idu, int &idw);
-        std::vector<int> SSRQ_static2(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, int &idu);
-        int max_reach_static(std::vector<algo::third_entry> &LEO);
+        bool SPRQ_static(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, std::vector<std::vector<int>> &dst_pos, int &idu, int &idw);
+        std::vector<int> SSRQ_static(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, int &idu);
+        int max_reach_static(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos);
         std::vector<algo::third_entry> vertex_removal(std::vector<algo::third_entry> &LEO, int vertex_id, bool layer);
         std::vector<algo::third_entry> edge_removal(std::vector<algo::third_entry> &LEO, algo::edge &edge);
         bool edge_colliding2(algo::edge const &e1, algo::edge const &e2);
         void entry_insertion(std::vector<algo::third_entry> &LEO, algo::third_entry &entry);
         std::vector<algo::third_entry> edge_addition(std::vector<algo::third_entry> &LEO, algo::edge &edge);
 
+        int test_construction_baseline(algo::Graph graph, algo::partition order);
+        int test_construction_WTB(algo::Graph graph);
         int test_SPRQ_baseline(TBP_index const &index, std::vector<int> test, std::vector<int> test2);
         int test_SPRQ_WTB(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, std::vector<std::vector<int>> &dst_pos, std::vector<int> test, std::vector<int> test2);
         int test_SSRQ_baseline(std::vector<std::vector<algo::entry>> &L_out, std::vector<std::vector<algo::entry>> &invL_in, std::vector<int> test);

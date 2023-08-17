@@ -71,31 +71,6 @@ void algo::Core::init_data(std::string const &src)
     }
 }
 
-/*
-    for (int i = 0; i < 5; i++) {
-        for (int j = 0; j < 5; j++) {
-            if (j != i) {
-                int a = i;
-                int b = j;
-                bool eval = SPRQ_static(LEO, std::get<0>(posit), std::get<1>(posit), a, b);
-                std::cout << a+1 << " " << b+1 << ": " << eval << std::endl;
-            }
-        }
-    }
-    std::vector<robin_hood::unordered_flat_map<int, std::vector<algo::wedge1>>> list_dict = index_build_static(graph);
-    std::vector<algo::third_entry> LEO = sort_static(list_dict);
-    list_dict.clear();
-    std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<int>>> posit = list_position(LEO);
-    auto index = real_index_static(LEO, INT_MAX);
-    greedy_static(graph, 3);
-
-    std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> l_dict = third_index_build(graph);
-    third_choose_vertex_v2(l_dict, graph.upper.size());
-    greedy3_v2(graph, 3);
-*/
-
-
-
 /**
  * The function "get_vertex_order" returns a vector of integers representing the order of vertices in a
  * graph, sorted in descending order based on the number of edges each vertex has.
@@ -612,7 +587,7 @@ std::vector<algo::wedge> algo::Core::necessary_wedges(std::vector<algo::wedge> &
 }
 
 /**
- * The function `third_index_build` builds a WTB index for a graph by iterating through the
+ * The function `WTB_index_build` builds a WTB index for a graph by iterating through the
  * lower level nodes and their edges, and creating a map of vertex pairs to a vector of wedges.
  * 
  * @param graph The `graph` parameter is an object of type `algo::Graph`, which represents a graph data
@@ -626,7 +601,7 @@ std::vector<algo::wedge> algo::Core::necessary_wedges(std::vector<algo::wedge> &
  * @return a vector of maps. Each map contains a pair of vertices as the key and a vector of wedges as
  * the value.
  */
-std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> algo::Core::third_index_build(algo::Graph &graph, int const &start, int const &end)
+std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> algo::Core::WTB_index_build(algo::Graph &graph, int const &start, int const &end)
 {
     std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> list_dict(graph.lower.size());
     for (int i = 0; i < graph.lower.size(); i++) {
@@ -696,7 +671,7 @@ std::vector<algo::third_entry> algo::Core::sort_list_entries(std::vector<std::ma
 }
 
 /**
- * The function `third_choose_vertex_v2` first constructs the lists L_reach and L_count for a WTB-index
+ * The function `choose_vertex_WTB` first constructs the lists L_reach and L_count for a WTB-index
  * and then finds the best vertex to remove using L_count.
  * 
  * @param vector `list_dict` is a WTB-index (sorted).
@@ -704,7 +679,7 @@ std::vector<algo::third_entry> algo::Core::sort_list_entries(std::vector<std::ma
  * 
  * @return an integer value, which represents the ID of the chosen vertex.
  */
-int algo::Core::third_choose_vertex_v2(std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> &list_dict, int &size)
+int algo::Core::choose_vertex_WTB(std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> &list_dict, int &size)
 {
     std::vector<algo::third_entry> list_entries_ordered = sort_list_entries(list_dict);
     std::vector<int> list_max_reach;
@@ -792,7 +767,7 @@ int algo::Core::third_choose_vertex_v2(std::vector<std::map<algo::vertices_pair,
 }
 
 /**
- * The function `greedy3_v2` implements a greedy algorithm to remove `k` vertices from a graph, returning
+ * The function `greedy_WTB` implements a greedy algorithm to remove `k` vertices from a graph, returning
  * the list of removed vertices.
  * 
  * @param graph Temporal bipartite graph.
@@ -802,13 +777,13 @@ int algo::Core::third_choose_vertex_v2(std::vector<std::map<algo::vertices_pair,
  * 
  * @return Vector of the removed vertices.
  */
-std::vector<int> algo::Core::greedy3_v2(algo::Graph &graph, int k, int const &start, int const &end)
+std::vector<int> algo::Core::greedy_WTB(algo::Graph &graph, int k, int const &start, int const &end)
 {
     std::vector<int> vertices_removed;
-    std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> list_dict = third_index_build(graph, start, end);
+    std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> list_dict = WTB_index_build(graph, start, end);
     int size = graph.upper.size();
     for(int i = 0; i < k; i++){
-        int idv = third_choose_vertex_v2(list_dict, size);
+        int idv = choose_vertex_WTB(list_dict, size);
         vertices_removed.push_back(idv);
         list_dict[idv].clear();
     }
@@ -839,7 +814,7 @@ std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<int>>> algo::C
 }
 
 /**
- * The function SPRQ_static2 checks if there is a path between two nodes in a graph based on the given
+ * The function SPRQ_static checks if there is a path between two nodes in a graph based on the given
  * source and destination positions.
  * 
  * @param LEO A vector of algo::third_entry objects, representing a list of entries.
@@ -854,7 +829,7 @@ std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<int>>> algo::C
  * 
  * @return a boolean value.
  */
-bool algo::Core::SPRQ_static2(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, std::vector<std::vector<int>> &dst_pos, int &idu, int &idw)
+bool algo::Core::SPRQ_static(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, std::vector<std::vector<int>> &dst_pos, int &idu, int &idw)
 {
     int first_pos;
     int last_pos;
@@ -890,7 +865,7 @@ bool algo::Core::SPRQ_static2(std::vector<algo::third_entry> &LEO, std::vector<s
 }
 
 /**
- * The function `SSRQ_static2` takes in a list of entries, a list of positions, and an ID, and returns
+ * The function `SSRQ_static` takes in a list of entries, a list of positions, and an ID, and returns
  * a list of reachable nodes.
  * 
  * @param LEO A vector of algo::third_entry objects, representing a list of entries.
@@ -901,7 +876,7 @@ bool algo::Core::SPRQ_static2(std::vector<algo::third_entry> &LEO, std::vector<s
  * 
  * @return a vector of integers.
  */
-std::vector<int> algo::Core::SSRQ_static2(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, int &idu)
+std::vector<int> algo::Core::SSRQ_static(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, int &idu)
 {
     int first_pos;
     if (src_pos[idu].empty()) {
@@ -938,28 +913,15 @@ std::vector<int> algo::Core::SSRQ_static2(std::vector<algo::third_entry> &LEO, s
  * 
  * @return the maximum reachability value, which is an integer.
  */
-int algo::Core::max_reach_static(std::vector<algo::third_entry> &LEO)
+int algo::Core::max_reach_static(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos)
 {
-    std::vector<std::vector<int>> list_reach(graph.upper.size(), std::vector<int>(graph.upper.size()));
-    std::vector<int> count_reach(graph.upper.size());
+    //int epoc = 0;
     int maxR = 0;
-    for (int i = 0; i < LEO.size(); i++) {
-        algo::third_entry entry = LEO[i];
-        if (list_reach[entry.dst][entry.src] == 0) {
-            list_reach[entry.dst][entry.src] = entry.end_time;
-            count_reach[entry.src]++;
-            maxR = std::max(maxR, count_reach[entry.src]);
-        }
-        for (int j = 0; j < list_reach[entry.src].size(); j++) {
-            if (list_reach[entry.src][j] != 0) {
-                if (list_reach[entry.src][j] > entry.start_time) continue;
-                if (j != entry.dst && list_reach[entry.dst][j] == 0) {
-                    list_reach[entry.dst][j] = entry.end_time;
-                    count_reach[j]++;
-                    maxR = std::max(maxR, count_reach[j]);
-                }
-            }
-        }
+    for (int i = 0; i < graph.upper.size(); i++) {
+        //if (epoc % 10000 == 0 && epoc != 0) std::cout << "Ep = " << epoc << std::endl;
+        //epoc++;
+        int reach = SSRQ_static(LEO, src_pos, i).size();
+        maxR = std::max(maxR, reach);
     }
     return maxR;
 }
@@ -1083,68 +1045,130 @@ std::vector<algo::third_entry> algo::Core::edge_addition(std::vector<algo::third
  * The following functions are the test functions for the different operations (SPRQ, SSRQ, MRQ...) for both
  * the TBP-index and the WTB-index.
  */
+int algo::Core::test_construction_baseline(algo::Graph graph, algo::partition order)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+
+    auto index = TBP_build(order, graph);
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "TBP - Construction: " << duration.count() << " microseconds" << std::endl;
+    return 0;
+}
+
+int algo::Core::test_construction_WTB(algo::Graph graph)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+
+    auto index = WTB_index_build(graph, 0, INT_MAX);
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "WTB - Construction: " << duration.count() << " microseconds" << std::endl;
+    return 0;
+}
+
 int algo::Core::test_SPRQ_baseline(algo::TBP_index const &index, std::vector<int> test, std::vector<int> test2)
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     std::vector<bool> eval;
     for (int i = 0; i < test.size(); i++) {
         bool e = TBP_query(index, graph.upper[test[i]], graph.upper[test2[i]], 0, INT_MAX);
         eval.push_back(e);
     }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "TBP - SPRQ for " << test.size() << " queries: " << duration.count() << " microseconds" << std::endl;
     return 0;
 }
 
 int algo::Core::test_SPRQ_WTB(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, std::vector<std::vector<int>> &dst_pos, std::vector<int> test, std::vector<int> test2)
 {
+    auto start = std::chrono::high_resolution_clock::now();
+    
     std::vector<bool> eval;
     for (int i = 0; i < test.size(); i++) {
-        bool e = SPRQ_static2(LEO, src_pos, dst_pos, test[i], test2[i]);
+        bool e = SPRQ_static(LEO, src_pos, dst_pos, test[i], test2[i]);
         eval.push_back(e);
     }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "WTB - SPRQ for " << test.size() << " queries: " << duration.count() << " microseconds" << std::endl;
     return 0;
 }
 
 int algo::Core::test_SSRQ_baseline(std::vector<std::vector<algo::entry>> &L_out, std::vector<std::vector<algo::entry>> &invL_in, std::vector<int> test)
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     std::vector<int> eval;
     for (int i = 0; i < test.size(); i++) {
         int e = SSRQ(graph.upper[test[i]], L_out, invL_in);
         eval.emplace_back(e);
     }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "TBP - SSRQ for " << test.size() << " queries: " << duration.count() << " microseconds" << std::endl;
     return 0;
 }
 
 int algo::Core::test_SSRQ_WTB(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos, std::vector<int> test)
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     std::vector<int> eval;
     for (int i = 0; i < test.size(); i++) {
-        int e = SSRQ_static2(LEO, src_pos, test[i]).size();
+        int e = SSRQ_static(LEO, src_pos, test[i]).size();
         eval.emplace_back(e);
     }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "WTB - SSRQ for " << test.size() << " queries: " << duration.count() << " microseconds" << std::endl;
     return 0;
 }
 
 int algo::Core::test_maxR_baseline(std::vector<std::vector<algo::entry>> &L_out, std::vector<std::vector<algo::entry>> &invL_in)
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     std::vector<int> eval;
     for (int i = 0; i < 1; i++) {
         int e = maxR_baseline(L_out, invL_in);
         eval.emplace_back(e);
     }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "TBP - MaxReach: " << duration.count() << " microseconds" << std::endl;
     return 0;
 }
 
 int algo::Core::test_maxR_WTB(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos)
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     std::vector<int> eval;
     for (int i = 0; i < 1; i++) {
-        int e = max_reach_static(LEO);
+        int e = max_reach_static(LEO, src_pos);
         eval.emplace_back(e);
     }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "WTB - MaxReach: " << duration.count() << " microseconds" << std::endl;
     return 0;
 }
 
 int algo::Core::test_VRCQ_baseline(algo::Graph &graph)
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     int minimalMaxReach = INT_MAX;
     int vertex = 0;
     for (int i = 0; i < graph.lower.size(); i++){
@@ -1158,12 +1182,23 @@ int algo::Core::test_VRCQ_baseline(algo::Graph &graph)
             }
         }
     }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "TBP - VRCQ: " << duration.count() << " microseconds" << std::endl;
     return vertex;
 }
 
 int algo::Core::test_VRCQ_WTB(std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> &list_dict, int size)
 {
-    return third_choose_vertex_v2(list_dict, size);
+    auto start = std::chrono::high_resolution_clock::now();
+
+    int id = choose_vertex_WTB(list_dict, size);
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "WTB - VRCQ: " << duration.count() << " microseconds" << std::endl;
+    return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1180,13 +1215,11 @@ int algo::Core::main(int ac, char **av)
     
     std::vector<int> test;
     std::vector<int> test2;
-    std::vector<int> lower;
     std::random_device eng;
     using dist_params = typename std::uniform_int_distribution<int>::param_type;
     std::uniform_int_distribution<int> dist (0, graph.upper.size()-1);
     std::uniform_int_distribution<int> dist2 (0, graph.lower.size()-1);
-    
-    std::vector<int> test;
+
     for (int i = 0; i < 1000; i++) {
         int a = dist(eng);
         int b = dist(eng);
@@ -1195,7 +1228,6 @@ int algo::Core::main(int ac, char **av)
         }
         test.emplace_back(a);
         test2.emplace_back(b);
-        lower.emplace_back(dist2(eng));
     }
 
     ///////////////////////////
@@ -1205,39 +1237,30 @@ int algo::Core::main(int ac, char **av)
     for (int i = 0 ; i < order.size() ; i++) {
         graph.upper[order[i]].order = i;
     }
-    //auto index = TBP_build(order, graph);
-    //auto invL_in = inverted_in_label_set(index.L_in);
 
-    auto start = std::chrono::high_resolution_clock::now();
-    //auto index = TBP_build(order, graph);
+    test_construction_baseline(graph, order);
 
-    //test_SPRQ_baseline(index, test, test2);
-    //test_SSRQ_baseline(index.L_out, invL_in, test);
-    //test_maxR_baseline(index.L_out, invL_in);
+    auto index = TBP_build(order, graph);
+    auto invL_in = inverted_in_label_set(index.L_in);
+
+    test_SPRQ_baseline(index, test, test2);
+    test_SSRQ_baseline(index.L_out, invL_in, test);
+    test_maxR_baseline(index.L_out, invL_in);
     //test_VRCQ_baseline(graph);
-
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "Time taken by function: " << duration.count() << " microseconds" << std::endl;
 
     ////////////////////////////
     // WTB
 
-    auto list_dict1 = third_index_build(graph, 0, INT_MAX);
+    test_construction_WTB(graph);
+
+    auto list_dict1 = WTB_index_build(graph, 0, INT_MAX);
     std::vector<algo::third_entry> LEO = sort_list_entries(list_dict1);
-    list_dict1.clear();
     std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<int>>> posit = list_position(LEO);
-    auto start1 = std::chrono::high_resolution_clock::now();
-    //auto list_dict1 = third_index_build(graph, 0, INT_MAX);
 
-    //test_SPRQ_WTB(LEO, std::get<0>(posit), std::get<1>(posit), test, test2);
-    //test_SSRQ_WTB(LEO, std::get<0>(posit), test);
-    //test_maxR_WTB(LEO, std::get<0>(posit));
-    //test_VRCQ_WTB(list_dict, graph.upper.size());
-
-    auto stop1 = std::chrono::high_resolution_clock::now();
-    auto duration1 = std::chrono::duration_cast<std::chrono::microseconds>(stop1 - start1);
-    std::cout << "Time taken by function: " << duration1.count() << " microseconds" << std::endl;
+    test_SPRQ_WTB(LEO, std::get<0>(posit), std::get<1>(posit), test, test2);
+    test_SSRQ_WTB(LEO, std::get<0>(posit), test);
+    test_maxR_WTB(LEO, std::get<0>(posit));
+    test_VRCQ_WTB(list_dict1, graph.upper.size());
 
     return 0;
 }
