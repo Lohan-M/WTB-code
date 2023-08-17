@@ -18,4 +18,4 @@ Then, run this command:
 ```
 With ./path-to-dataset the path to the dataset you want to run the experiments on.
 
-The main function in the file new_core.cpp (at the end of the file) executes the test functions for the different operations. You can comment/uncomment the test functions to choose which operations you want to test. You can also change the value '1000' at line 1223 which controls the number of repetitions of SPRQs and SSRQs.
+The function 'algo::Core::main' in the file new_core.cpp (at the end of the file) executes the test functions for the different operations. You can comment/uncomment the test functions to choose which operations you want to test. You can also change the value '1000' at line 1223 which controls the number of repetitions of SPRQs and SSRQs.
