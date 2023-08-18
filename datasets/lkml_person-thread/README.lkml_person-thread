@@ -1,0 +1,74 @@
+Linux kernel mailing list threads network, part of the Koblenz Network Collection
+===========================================================================
+
+This directory contains the TSV and related files of the lkml_person-thread network: This bipartite network contains contributions of persons to various threads of the Linux kernel mailing list. An edge represents a post; left nodes are persons and right nodes represent threads in the mailing list.  
+
+
+More information about the network is provided here: 
+http://konect.cc/networks/lkml_person-thread
+
+Files: 
+    meta.lkml_person-thread -- Metadata about the network 
+    out.lkml_person-thread -- The adjacency matrix of the network in whitespace-separated values format, with one edge per line
+      The meaning of the columns in out.lkml_person-thread are: 
+        First column: ID of from node 
+        Second column: ID of to node
+        Third column (if present): weight or multiplicity of edge
+        Fourth column (if present):  timestamp of edges Unix time
+        Third column: edge weight
+        Fourth column: timestamp of the edge
+
+
+Use the following References for citation:
+
+@MISC{konect:2017:lkml_person-thread,
+    title = {Linux kernel mailing list threads network dataset -- {KONECT}},
+    month = oct,
+    year = {2017},
+    url = {http://konect.cc/networks/lkml_person-thread}
+}
+
+@inproceedings{konect:lkml,
+	title = {Private-Collective Invention and Open Source Software:  Longitudinal Insights from {Linux} Kernel Development},  
+	author = {Dirk Homscheid and Jérôme Kunegis and Mario Schaarschmidt},
+	booktitle = {Proc. IFIP Conf. on e-Business, e-Services and e-Society},
+	year = {2015},
+	pages = {299--313},
+	url = {https://link.springer.com/chapter/10.1007/978-3-319-25013-7_24},
+}
+
+@inproceedings{konect:lkml,
+	title = {Private-Collective Invention and Open Source Software:  Longitudinal Insights from {Linux} Kernel Development},  
+	author = {Dirk Homscheid and Jérôme Kunegis and Mario Schaarschmidt},
+	booktitle = {Proc. IFIP Conf. on e-Business, e-Services and e-Society},
+	year = {2015},
+	pages = {299--313},
+	url = {https://link.springer.com/chapter/10.1007/978-3-319-25013-7_24},
+}
+
+
+@inproceedings{konect,
+	title = {{KONECT} -- {The} {Koblenz} {Network} {Collection}},
+	author = {Jérôme Kunegis},
+	year = {2013},
+	booktitle = {Proc. Int. Conf. on World Wide Web Companion},
+	pages = {1343--1350},
+	url = {http://dl.acm.org/citation.cfm?id=2488173},
+	url_presentation = {https://www.slideshare.net/kunegis/presentationwow},
+	url_web = {http://konect.cc/},
+	url_citations = {https://scholar.google.com/scholar?cites=7174338004474749050},
+}
+
+@inproceedings{konect,
+	title = {{KONECT} -- {The} {Koblenz} {Network} {Collection}},
+	author = {Jérôme Kunegis},
+	year = {2013},
+	booktitle = {Proc. Int. Conf. on World Wide Web Companion},
+	pages = {1343--1350},
+	url = {http://dl.acm.org/citation.cfm?id=2488173},
+	url_presentation = {https://www.slideshare.net/kunegis/presentationwow},
+	url_web = {http://konect.cc/},
+	url_citations = {https://scholar.google.com/scholar?cites=7174338004474749050},
+}
+
+
