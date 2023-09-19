@@ -1201,6 +1201,54 @@ int algo::Core::test_VRCQ_WTB(std::vector<std::map<algo::vertices_pair, std::vec
     return 0;
 }
 
+int algo::Core::test_vertex_removal(std::vector<algo::third_entry> &LEO, std::vector<int> test, std::vector<int> test2)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::vector<algo::third_entry> new_LEO = LEO;
+    for (int i = 0; i < test.size()/2; i++){
+        vertex_removal(new_LEO, test[i], 0);
+    }
+    for (int i = 0; i < test2.size()/2; i++){
+        vertex_removal(new_LEO, test2[i], 1);
+    }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "WTB - " << test.size()/2 + test2.size()/2 << " vertex removals: " << duration.count() << " microseconds" << std::endl;
+    return 0;
+}
+
+int algo::Core::test_edge_removal(std::vector<algo::third_entry> &LEO, std::vector<int> test_edges)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::vector<algo::third_entry> new_LEO = LEO;
+    for (int i = 0; i < test_edges.size(); i++){
+        edge_removal(new_LEO, edges[test_edges[i]]);
+    }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "WTB - " << test_edges.size() << " edge removals: " << duration.count() << " microseconds" << std::endl;
+    return 0;
+}
+
+int algo::Core::test_edge_addition(std::vector<algo::third_entry> &LEO, std::vector<algo::edge> test_new_edges)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::vector<algo::third_entry> new_LEO = LEO;
+    for (int i = 0; i < test_new_edges.size(); i++){
+        edge_addition(new_LEO, test_new_edges[i]);
+    }
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "WTB - " << test_new_edges.size() << " edge additions: " << duration.count() << " microseconds" << std::endl;
+    return 0;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
  * Main function to time the operations
@@ -1215,19 +1263,32 @@ int algo::Core::main(int ac, char **av)
     
     std::vector<int> test;
     std::vector<int> test2;
+    std::vector<int> test3;
+    std::vector<int> test_edges;
+    std::vector<algo::edge> test_new_edges;
     std::random_device eng;
     using dist_params = typename std::uniform_int_distribution<int>::param_type;
     std::uniform_int_distribution<int> dist (0, graph.upper.size()-1);
     std::uniform_int_distribution<int> dist2 (0, graph.lower.size()-1);
+    std::uniform_int_distribution<int> dist_edges (0, edges.size()-1);
+    std::uniform_int_distribution<int> dist_start_time (1100000000, 1400000000);
 
     for (int i = 0; i < 1000; i++) {
         int a = dist(eng);
         int b = dist(eng);
+        int c = dist2(eng);
+        int d = dist_edges(eng);
         while (b == a) {
             b = dist(eng);
         }
         test.emplace_back(a);
         test2.emplace_back(b);
+        test3.emplace_back(c);
+        test_edges.emplace_back(d);
+        int start = dist_start_time(eng);
+        int end = start + rndm(3600, 172800, -2.5);
+        algo::edge new_edge = {a, c, start, end};
+        test_new_edges.emplace_back(new_edge);
     }
 
     ///////////////////////////
@@ -1238,29 +1299,33 @@ int algo::Core::main(int ac, char **av)
         graph.upper[order[i]].order = i;
     }
 
-    test_construction_baseline(graph, order);
+    //test_construction_baseline(graph, order);
 
-    auto index = TBP_build(order, graph);
-    auto invL_in = inverted_in_label_set(index.L_in);
+    //auto index = TBP_build(order, graph);
+    //auto invL_in = inverted_in_label_set(index.L_in);
 
-    test_SPRQ_baseline(index, test, test2);
-    test_SSRQ_baseline(index.L_out, invL_in, test);
-    test_maxR_baseline(index.L_out, invL_in);
+    //test_SPRQ_baseline(index, test, test2);
+    //test_SSRQ_baseline(index.L_out, invL_in, test);
+    //test_maxR_baseline(index.L_out, invL_in);
     //test_VRCQ_baseline(graph);
 
     ////////////////////////////
     // WTB
 
-    test_construction_WTB(graph);
+    //test_construction_WTB(graph);
 
     auto list_dict1 = WTB_index_build(graph, 0, INT_MAX);
     std::vector<algo::third_entry> LEO = sort_list_entries(list_dict1);
     std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<int>>> posit = list_position(LEO);
 
-    test_SPRQ_WTB(LEO, std::get<0>(posit), std::get<1>(posit), test, test2);
-    test_SSRQ_WTB(LEO, std::get<0>(posit), test);
-    test_maxR_WTB(LEO, std::get<0>(posit));
-    test_VRCQ_WTB(list_dict1, graph.upper.size());
+    //test_SPRQ_WTB(LEO, std::get<0>(posit), std::get<1>(posit), test, test2);
+    //test_SSRQ_WTB(LEO, std::get<0>(posit), test);
+    //test_maxR_WTB(LEO, std::get<0>(posit));
+    //test_VRCQ_WTB(list_dict1, graph.upper.size());
+
+    test_vertex_removal(LEO, test, test3);
+    test_edge_removal(LEO, test_edges);
+    test_edge_addition(LEO, test_new_edges);
 
     return 0;
 }

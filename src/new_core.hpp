@@ -175,6 +175,9 @@ namespace algo {
         int test_maxR_WTB(std::vector<algo::third_entry> &LEO, std::vector<std::vector<int>> &src_pos);
         int test_VRCQ_baseline(algo::Graph &graph);
         int test_VRCQ_WTB(std::vector<std::map<algo::vertices_pair, std::vector<algo::wedge>, algo::pairCompare>> &list_dict, int size);
+        int test_vertex_removal(std::vector<algo::third_entry> &LEO, std::vector<int> test, std::vector<int> test2);
+        int test_edge_removal(std::vector<algo::third_entry> &LEO, std::vector<int> test_edges);
+        int test_edge_addition(std::vector<algo::third_entry> &LEO, std::vector<algo::edge> test_new_edges);
     };
     
     int rndm(int a, int b, double g);
