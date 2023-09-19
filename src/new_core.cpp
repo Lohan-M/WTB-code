@@ -1299,29 +1299,29 @@ int algo::Core::main(int ac, char **av)
         graph.upper[order[i]].order = i;
     }
 
-    //test_construction_baseline(graph, order);
+    test_construction_baseline(graph, order);
 
-    //auto index = TBP_build(order, graph);
-    //auto invL_in = inverted_in_label_set(index.L_in);
+    auto index = TBP_build(order, graph);
+    auto invL_in = inverted_in_label_set(index.L_in);
 
-    //test_SPRQ_baseline(index, test, test2);
-    //test_SSRQ_baseline(index.L_out, invL_in, test);
-    //test_maxR_baseline(index.L_out, invL_in);
+    test_SPRQ_baseline(index, test, test2);
+    test_SSRQ_baseline(index.L_out, invL_in, test);
+    test_maxR_baseline(index.L_out, invL_in);
     //test_VRCQ_baseline(graph);
 
     ////////////////////////////
     // WTB
 
-    //test_construction_WTB(graph);
+    test_construction_WTB(graph);
 
     auto list_dict1 = WTB_index_build(graph, 0, INT_MAX);
     std::vector<algo::third_entry> LEO = sort_list_entries(list_dict1);
     std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<int>>> posit = list_position(LEO);
 
-    //test_SPRQ_WTB(LEO, std::get<0>(posit), std::get<1>(posit), test, test2);
-    //test_SSRQ_WTB(LEO, std::get<0>(posit), test);
-    //test_maxR_WTB(LEO, std::get<0>(posit));
-    //test_VRCQ_WTB(list_dict1, graph.upper.size());
+    test_SPRQ_WTB(LEO, std::get<0>(posit), std::get<1>(posit), test, test2);
+    test_SSRQ_WTB(LEO, std::get<0>(posit), test);
+    test_maxR_WTB(LEO, std::get<0>(posit));
+    test_VRCQ_WTB(list_dict1, graph.upper.size());
 
     test_vertex_removal(LEO, test, test3);
     test_edge_removal(LEO, test_edges);
